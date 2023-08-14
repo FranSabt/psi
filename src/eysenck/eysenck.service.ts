@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EysenckTest } from 'src/quiz/eynsenck';
+import { EysenckRawResults, EysenckTest } from 'src/quiz/eynsenck';
 
 @Injectable()
 export class EysenckService {
@@ -37,14 +37,13 @@ export class EysenckService {
   //////////////////////////////////////////////////////////
 
   ComputeTest(test: any) {
-    const result: object = {};
+    const result: EysenckRawResults = new EysenckRawResults();
 
     for (const q of test) {
       if (q.answer) {
         result[q.type] = (result[q.type] || 0) + 1;
       }
     }
-
     return result;
   }
 
@@ -67,13 +66,14 @@ export class EysenckService {
   ReturnResults(data: any) {
     const Result: object = {};
 
+    //* SINCERIDAD *//
     if (data.L > 4) {
       Result['L'] =
-        'El sujeto no es objetivo en la autoevaluación de sus rasgos y tampoco le gusta mostrarse tal cual es.';
+        'El sujeto no es objetivo en la autoevaluación de sus rasgos y tampoco le gusta mostrarse tal cual es.\nLos resultados del test no son concluyentes';
     } else {
       Result['L'] = 'El sujeto respondió con sinceridad al cuestionario.';
     }
-
+    //* NEUROTICISMO *//
     if (data.N > 10 && data.N < 15) {
       Result['N'] =
         'Eres una persona emocionalmente estable y equilibrada. No eres propenso(a) a experimentar emociones negativas, tales como la ansiedad, la depresión o la ira. También eres capaz de manejar el estrés y las dificultades de la vida de una manera sana.\nLas personas con un puntaje medio en N tienden a ser exitosas en sus vidas personales y profesionales. Son capaces de establecer y mantener relaciones sólidas, y también son capaces de alcanzar sus objetivos.\nTambién son capaces de lidiar con el estrés de la vida diaria sin sentirse abrumados.';
@@ -100,6 +100,25 @@ export class EysenckService {
   }
   //////////////////////////////////////////////////////////
 
+  Temperament(RawResult: EysenckRawResults) {
+    const { N, E } = RawResult;
+    if (E <= 13 && N >= 13) {
+      return 'MELANCÓLICO (Introvertido - Inestable): Son sujetos de sistema nervioso débil, especialmente de los process inhibitorios, tienden a ser caprichosos, ansiosos, rígidos, soberbios, pesimistas, reservados, insociables, tranquilos y ensimismados. Una tasa muy elevada, determina la personalidad distímica con tendencia a las fobias y obsesiones, sus condicionamientos emocionales son muy rígidos y estables.';
+    }
+
+    if (E <= 13 && N < 13) {
+      return 'FLEMÁTICO (Introvertido - estable): Sus procesos neurodinámicos son fuertes, equilibrados y lentos, son personas pacíficas, cuidadosas y tercas, pasivas, controlas y formales, uniformes, calmadas, se fijan a una rutina y hábitos de vida bien estructurados, de ánimo estabilizado, grandemente productivo, reflexivo capaz de volver a sus objetivos, a pesar de las dificultades que se le presentan, vuelve a reestructurar este aspecto, una alta tasa de introversión puede determinar cierta pereza y desapego al ambiente.';
+    }
+
+    if (E > 13 && N < 13) {
+      return 'COLÉRICO (Extrovertido - Inestable): Sus procesos neurodinámicos son muy fuertes, pero hay desequilibrio entre inhibición y excitación: son personas sensibles, intranquilas, agresivas, excitables, inconstantes, impulsivas, optimistas y activas, tienen dificultad para dormir pero mucha facilidad para despertarse. Una alta tasa de extroversión y neuroticismo, define a la persona histeropática (inmadurez sin control emocional) los coléricos son de respuestas enérgicas y rápidas.';
+    } else {
+      return 'SANGUÍNEO: (Extrovertido - Estable): Sus procesos neurodinámicos son fuertes, equilibrados y de movilidad rápida, son personas sociales, discordantes, locuaces reactivas, vivaces despreocupadas, tienden a ser líderes de gran productividad, buena capacidad de trabajo, facilidad para adecuarse a situaciones nuevas, una alta tasa de dimensión extrovertida puede determinar el desperdigamiento (diseminación) y desorden de la actividad.';
+    }
+  }
+
+  //////////////////////////////////////////////////////////
+
   ProcessTest(data: any) {
     console.log('Hello');
 
@@ -109,11 +128,13 @@ export class EysenckService {
 
     const Eval = this.EvalAnwser(test, TestEysenck);
 
-    //console.log(Eval);
     const RawResult = this.ComputeTest(Eval);
 
     const TestResult = this.ReturnResults(RawResult);
+
+    const Personality = this.Temperament(RawResult);
     console.log(RawResult);
     console.log(TestResult);
+    console.log(Personality);
   }
 }

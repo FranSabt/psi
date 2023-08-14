@@ -386,3 +386,9 @@ export class EysenckTest implements Quiz {
     },
   ];
 }
+
+export class EysenckRawResults {
+  E: number;
+  N: number;
+  L: number;
+}
