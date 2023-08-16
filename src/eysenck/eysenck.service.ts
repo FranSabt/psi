@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EysenckRawResults, EysenckTest } from 'src/quiz/eynsenck';
+import { FinalEval, TraitsResult } from './FinalResults';
 
 @Injectable()
 export class EysenckService {
@@ -64,7 +65,7 @@ export class EysenckService {
   //////////////////////////////////////////////////////////
 
   ReturnResults(data: any) {
-    const Result: object = {};
+    const Result: TraitsResult = new TraitsResult();
 
     //* SINCERIDAD *//
     if (data.L > 4) {
@@ -119,22 +120,52 @@ export class EysenckService {
 
   //////////////////////////////////////////////////////////
 
-  ProcessTest(data: any) {
-    console.log('Hello');
+  FinalEva(
+    RawResult: EysenckRawResults,
+    TestResult: TraitsResult,
+    Temperament: string,
+  ) {
+    const result = new FinalEval();
 
+    result.Date = new Date();
+    result.PointsE = RawResult.E;
+    result.PointsN = RawResult.N;
+    result.PointsL = RawResult.L;
+    result.DescriptionE = TestResult.E;
+    result.DescriptionN = TestResult.N;
+    result.DescriptionL = TestResult.L;
+    result.Temperament = Temperament;
+
+    return result;
+  }
+
+  //////////////////////////////////////////////////////////
+
+  ProcessTest(data: any) {
     const { test } = data;
 
     const TestEysenck = this.eysenckTest;
 
     const Eval = this.EvalAnwser(test, TestEysenck);
 
+    // Puntuaciones crudas
     const RawResult = this.ComputeTest(Eval);
 
+    // Evalua cada uno de los rasgos de personalidad
     const TestResult = this.ReturnResults(RawResult);
 
+    // Evalua temperamento
     const Personality = this.Temperament(RawResult);
-    console.log(RawResult);
-    console.log(TestResult);
-    console.log(Personality);
+    // console.log('RawResult', RawResult);
+    // console.log(TestResult);
+    // console.log(Personality);
+
+    const Results = this.FinalEva(RawResult, TestResult, Personality);
+
+    /**
+     *  Aqui va la logica asociada al guardado de los datos.
+     */
+
+    return Results;
   }
 }
